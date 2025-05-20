@@ -190,8 +190,6 @@ C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\iuvs6xcilw-n
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\8pvspordfl-h1s4sie4z3.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\7nw558jv8c-63fj8s7r0e.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\rkxrbij793-0j3bgjxly4.gz
-C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\6bh6l61vl3-s2f15p094c.gz
-C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\p0yzvuuk5i-s2f15p094c.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\staticwebassets.build.json
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\staticwebassets.development.json
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\staticwebassets.build.endpoints.json
@@ -207,3 +205,5 @@ C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\refint\SimpleVetBooking
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.pdb
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.genruntimeconfig.cache
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\ref\SimpleVetBooking.dll
+C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\6bh6l61vl3-zorg6dcdil.gz
+C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\p0yzvuuk5i-zorg6dcdil.gz

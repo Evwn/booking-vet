@@ -44,14 +44,10 @@
 
 ## Login Information
 
-### Admin Account
-- Email: admin@simplevets.com
-- Password: Admin123!
-
 ### Sample Veterinarian Account
-- Email: drsmith@simplevets.com
-- Password: Vet123!
+- Email: sarah.johnson@vetclinic.com
+- Password: P@ssword1
 
 ### Sample Client Account
-- Email: client@example.com
-- Password: Client123!
+- Email: erastuseven@gmail.com
+- Password: wrMxcGe5-nmuy!d

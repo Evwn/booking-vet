@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "V1Gbk97PjBW4uQYEPvxSUygZC9WBBh4xI+2NMnE0Z5w=",
+  "Hash": "R6bgEjbOjIFPX0CS5boOgRBgzGl5K/JPEh1jlZffO5k=",
   "Source": "SimpleVetBooking",
   "BasePath": "_content/SimpleVetBooking",
   "Mode": "Default",
@@ -185,12 +185,12 @@
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css"
     },
     {
-      "Identity": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-s2f15p094c.gz",
+      "Identity": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-zorg6dcdil.gz",
       "SourceId": "SimpleVetBooking",
       "SourceType": "Computed",
       "ContentRoot": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/SimpleVetBooking",
-      "RelativePath": "SimpleVetBooking#[.{fingerprint=s2f15p094c}]?.styles.css.gz",
+      "RelativePath": "SimpleVetBooking#[.{fingerprint=zorg6dcdil}]?.styles.css.gz",
       "AssetKind": "All",
       "AssetMode": "CurrentProject",
       "AssetRole": "Alternative",
@@ -199,8 +199,8 @@
       "RelatedAsset": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "cr1oxubh3g",
-      "Integrity": "6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=",
+      "Fingerprint": "yl9tu71xii",
+      "Integrity": "5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css"
@@ -794,12 +794,12 @@
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css"
     },
     {
-      "Identity": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-s2f15p094c.gz",
+      "Identity": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-zorg6dcdil.gz",
       "SourceId": "SimpleVetBooking",
       "SourceType": "Computed",
       "ContentRoot": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/SimpleVetBooking",
-      "RelativePath": "SimpleVetBooking#[.{fingerprint=s2f15p094c}]!.bundle.scp.css.gz",
+      "RelativePath": "SimpleVetBooking#[.{fingerprint=zorg6dcdil}]!.bundle.scp.css.gz",
       "AssetKind": "All",
       "AssetMode": "Reference",
       "AssetRole": "Alternative",
@@ -808,8 +808,8 @@
       "RelatedAsset": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\SimpleVetBooking.bundle.scp.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "cr1oxubh3g",
-      "Integrity": "6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=",
+      "Fingerprint": "yl9tu71xii",
+      "Integrity": "5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\SimpleVetBooking.bundle.scp.css"
@@ -1102,8 +1102,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "ScopedCss",
       "AssetTraitValue": "ApplicationBundle",
-      "Fingerprint": "s2f15p094c",
-      "Integrity": "lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=",
+      "Fingerprint": "zorg6dcdil",
+      "Integrity": "MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css"
@@ -1123,8 +1123,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "ScopedCss",
       "AssetTraitValue": "ProjectBundle",
-      "Fingerprint": "s2f15p094c",
-      "Integrity": "lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=",
+      "Fingerprint": "zorg6dcdil",
+      "Integrity": "MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\SimpleVetBooking.bundle.scp.css"
@@ -16867,12 +16867,12 @@
     },
     {
       "Route": "SimpleVetBooking.bundle.scp.css",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-s2f15p094c.gz",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-zorg6dcdil.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000560224090"
+          "Quality": "0.000535331906"
         }
       ],
       "ResponseHeaders": [
@@ -16882,15 +16882,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16910,13 +16910,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "W/\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
@@ -16931,7 +16931,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "5979"
+          "Value": "6290"
         },
         {
           "Name": "Content-Type",
@@ -16939,11 +16939,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16953,13 +16953,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
     {
       "Route": "SimpleVetBooking.bundle.scp.css.gz",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-s2f15p094c.gz",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-zorg6dcdil.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -16968,7 +16968,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "Content-Type",
@@ -16976,11 +16976,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -16998,18 +16998,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0="
+          "Value": "sha256-5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.bundle.scp.css",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-s2f15p094c.gz",
+      "Route": "SimpleVetBooking.styles.css",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-zorg6dcdil.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000560224090"
+          "Quality": "0.000535331906"
         }
       ],
       "ResponseHeaders": [
@@ -17019,15 +17019,152 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
+        }
+      ]
+    },
+    {
+      "Route": "SimpleVetBooking.styles.css",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "6290"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
+        }
+      ]
+    },
+    {
+      "Route": "SimpleVetBooking.styles.css.gz",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-zorg6dcdil.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1867"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU="
+        }
+      ]
+    },
+    {
+      "Route": "SimpleVetBooking.zorg6dcdil.bundle.scp.css",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-zorg6dcdil.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000535331906"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1867"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17047,13 +17184,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "W/\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17061,12 +17198,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.bundle.scp.css",
+      "Route": "SimpleVetBooking.zorg6dcdil.bundle.scp.css",
       "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\SimpleVetBooking.bundle.scp.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -17076,7 +17213,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "5979"
+          "Value": "6290"
         },
         {
           "Name": "Content-Type",
@@ -17084,11 +17221,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17098,7 +17235,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17106,13 +17243,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.bundle.scp.css.gz",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-s2f15p094c.gz",
+      "Route": "SimpleVetBooking.zorg6dcdil.bundle.scp.css.gz",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\p0yzvuuk5i-zorg6dcdil.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -17121,7 +17258,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "Content-Type",
@@ -17129,11 +17266,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17151,7 +17288,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17159,18 +17296,18 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0="
+          "Value": "sha256-5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.styles.css",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-s2f15p094c.gz",
+      "Route": "SimpleVetBooking.zorg6dcdil.styles.css",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-zorg6dcdil.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000560224090"
+          "Quality": "0.000535331906"
         }
       ],
       "ResponseHeaders": [
@@ -17180,15 +17317,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17208,13 +17345,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "W/\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17222,12 +17359,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.styles.css",
+      "Route": "SimpleVetBooking.zorg6dcdil.styles.css",
       "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -17237,7 +17374,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "5979"
+          "Value": "6290"
         },
         {
           "Name": "Content-Type",
@@ -17245,11 +17382,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
+          "Value": "\"MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17259,7 +17396,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17267,13 +17404,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
+          "Value": "sha256-MwqUk3dCsvITlsbfOLlo+wnib+e+5POZh+L3XOEDU6A="
         }
       ]
     },
     {
-      "Route": "SimpleVetBooking.s2f15p094c.styles.css.gz",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-s2f15p094c.gz",
+      "Route": "SimpleVetBooking.zorg6dcdil.styles.css.gz",
+      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-zorg6dcdil.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -17282,7 +17419,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1784"
+          "Value": "1867"
         },
         {
           "Name": "Content-Type",
@@ -17290,11 +17427,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
+          "Value": "\"5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
+          "Value": "Tue, 20 May 2025 05:56:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -17312,7 +17449,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "s2f15p094c"
+          "Value": "zorg6dcdil"
         },
         {
           "Name": "label",
@@ -17320,144 +17457,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0="
-        }
-      ]
-    },
-    {
-      "Route": "SimpleVetBooking.styles.css",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-s2f15p094c.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000560224090"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1784"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
-        }
-      ]
-    },
-    {
-      "Route": "SimpleVetBooking.styles.css",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\scopedcss\\bundle\\SimpleVetBooking.styles.css",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "5979"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-lGvfeIHtXQpfEZTODFYbgI+lK2hbFrYqTc0uRNP1cC8="
-        }
-      ]
-    },
-    {
-      "Route": "SimpleVetBooking.styles.css.gz",
-      "AssetFile": "C:\\Users\\admin\\Desktop\\SimpleVetBooking\\obj\\Debug\\net9.0\\compressed\\6bh6l61vl3-s2f15p094c.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1784"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 20 May 2025 05:51:34 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-6AcJ5Cn8WwIF3c/8X4BEqQo6E0uUoWXi30RTsp5AhM0="
+          "Value": "sha256-5n+f/WtuenQKAbMybb2GBHWsRLt2UO+x06N6UmnjBVU="
         }
       ]
     }

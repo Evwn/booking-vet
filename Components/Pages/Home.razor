@@ -15,8 +15,19 @@
         <h1 class="display-4">Welcome to SimpleVet Booking</h1>
         <p class="lead">Your trusted partner for all veterinary needs. Schedule appointments with our professional veterinarians easily and quickly.</p>
         <hr class="my-4">
-        <p>Already have an account? Login to manage your appointments.</p>
-        <button class="btn btn-primary btn-lg">Book Now</button>
+        <AuthorizeView>
+                    <Authorized>
+                        <div class="dropdown">
+                                Welcome, @GetUserFullName(context.User)
+                        </div>
+                        <a href="/appointments/book" class="btn btn-primary btn-lg">Book Now</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="login" class="btn btn-outline-primary me-2">Login</a>
+                        <p>Already have an account? Login to manage your appointments.</p>
+                        <a href="register" class="btn btn-primary">Register</a>
+                    </NotAuthorized>
+                </AuthorizeView>
     </div>
 
     <div class="row mt-5">
@@ -67,7 +78,7 @@
                         <h5>Dr. Emily Davis</h5>
                         <p>Specialization: Exotic Pets</p>
                     </div>
-                    <a href="#">View All Veterinarians →</a>
+                    <a href="http://localhost:5296/veterinarians">View All Veterinarians →</a>
                 </div>
             </div>
         </div>
@@ -94,5 +105,27 @@
                 }
             }
         }
+    }
+        private string GetUserFullName(System.Security.Claims.ClaimsPrincipal user)
+    {
+        try
+        {
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var appUser = DbContext.Users.FirstOrDefault(u => u.Id == userId);
+                if (appUser != null)
+                {
+                    return $"{appUser.FirstName} {appUser.LastName}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting user full name: {ex.Message}");
+        }
+        
+        // Fallback to identity name if something went wrong
+        return user.Identity?.Name ?? "User";
     }
 }
