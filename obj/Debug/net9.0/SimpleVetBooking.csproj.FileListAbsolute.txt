@@ -136,6 +136,7 @@ C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.Assemb
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.AssemblyInfo.cs
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.csproj.CoreCompileInputs.cache
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.sourcelink.json
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\scopedcss\bundle\SimpleVetBooking.styles.css
@@ -143,6 +144,8 @@ C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\scopedcss\projectbundle
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\7u6b2ivoyx-khy4lop6wu.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\tbqa5joglt-y58g3z9xkb.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\w7dkwr1v11-7y3e6zuski.gz
+C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\hsiaea9so0-k27rx8qymt.gz
+C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\uo5vg7hzs1-yu78tspv7y.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\nzd4thvl4k-bqjiyaj88i.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\er2q6rnt3z-c2jlpeoesf.gz
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\3m9gvmgveu-erw9l3u2r3.gz
@@ -204,5 +207,3 @@ C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\refint\SimpleVetBooking
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.pdb
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\SimpleVetBooking.genruntimeconfig.cache
 C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\ref\SimpleVetBooking.dll
-C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\uo5vg7hzs1-yu78tspv7y.gz
-C:\Users\admin\Desktop\SimpleVetBooking\obj\Debug\net9.0\compressed\hsiaea9so0-k27rx8qymt.gz

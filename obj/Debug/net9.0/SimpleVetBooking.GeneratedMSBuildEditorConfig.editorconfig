@@ -44,6 +44,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XExvZ291dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/admin/Desktop/SimpleVetBooking/Components/Pages/Account/Pets.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XFBldHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/admin/Desktop/SimpleVetBooking/Components/Pages/Account/Profile.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50XFByb2ZpbGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
