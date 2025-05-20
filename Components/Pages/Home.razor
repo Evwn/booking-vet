@@ -1,0 +1,98 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SimpleVetBooking.Data.ApplicationDbContext DbContext
+
+<PageTitle>SimpleVet Booking</PageTitle>
+
+<div class="container">
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome to SimpleVet Booking</h1>
+        <p class="lead">Your trusted partner for all veterinary needs. Schedule appointments with our professional veterinarians easily and quickly.</p>
+        <hr class="my-4">
+        <p>Already have an account? Login to manage your appointments.</p>
+        <button class="btn btn-primary btn-lg">Book Now</button>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Our Services</h2>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Regular Check-ups</li>
+                        <li class="list-group-item">Vaccinations</li>
+                        <li class="list-group-item">Emergency Care</li>
+                        <li class="list-group-item">Surgery</li>
+                        <li class="list-group-item">Dental Care</li>
+                        <li class="list-group-item">Grooming</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">How It Works</h2>
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item">Create an account or login</li>
+                        <li class="list-group-item">Choose a veterinarian</li>
+                        <li class="list-group-item">Select a service</li>
+                        <li class="list-group-item">Pick your preferred date & time</li>
+                        <li class="list-group-item">Confirm your booking</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Our Veterinarians</h2>
+                    <div class="vet-item mb-3">
+                        <h5>Dr. Sarah Johnson</h5>
+                        <p>Specialization: Small Animals</p>
+                    </div>
+                    <div class="vet-item mb-3">
+                        <h5>Dr. Michael Smith</h5>
+                        <p>Specialization: Surgery</p>
+                    </div>
+                    <div class="vet-item mb-3">
+                        <h5>Dr. Emily Davis</h5>
+                        <p>Specialization: Exotic Pets</p>
+                    </div>
+                    <a href="#">View All Veterinarians →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if the user is a veterinarian, and if so, redirect to the dashboard
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var appUser = await DbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (appUser != null && appUser.IsVeterinarian)
+                {
+                    // Redirect veterinarians to their dashboard
+                    NavigationManager.NavigateTo("/vet/dashboard");
+                }
+            }
+        }
+    }
+}

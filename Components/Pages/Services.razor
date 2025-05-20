@@ -1,0 +1,87 @@
+@page "/services"
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@inject ApplicationDbContext DbContext
+
+<PageTitle>Our Services</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Our Services</h1>
+    
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (services == null || !services.Any())
+    {
+        <div class="alert alert-info">No services found.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var service in services)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title">@service.Name</h3>
+                            <p class="card-text">@service.Description</p>
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-primary mb-2">$@service.Price</span>
+                                <span class="badge bg-secondary mb-2">@service.DurationMinutes min</span>
+                            </div>
+                            <h5 class="mt-3">Available Veterinarians</h5>
+                            <ul class="list-group mb-3">
+                                @foreach (var vet in service.Veterinarians.Select(vs => vs.Veterinarian))
+                                {
+                                    <li class="list-group-item">
+                                        Dr. @vet?.User?.FirstName @vet?.User?.LastName
+                                        <small class="text-muted d-block">@vet?.Specialization</small>
+                                    </li>
+                                }
+                            </ul>
+                            <div class="d-grid gap-2">
+                                <a href="/appointments/book?serviceId=@service.Id" class="btn btn-primary">Book This Service</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Service>? services;
+    private bool loading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadServices();
+    }
+    
+    private async Task LoadServices()
+    {
+        try
+        {
+            services = await DbContext.Services
+                .Include(s => s.Veterinarians)
+                    .ThenInclude(vs => vs.Veterinarian)
+                        .ThenInclude(v => v!.User)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading services: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+} 

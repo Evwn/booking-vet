@@ -1,0 +1,111 @@
+@page "/veterinarians"
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@inject ApplicationDbContext DbContext
+
+<PageTitle>Our Veterinarians</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Our Veterinarians</h1>
+    
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (veterinarians == null || !veterinarians.Any())
+    {
+        <div class="alert alert-info">No veterinarians found.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var vet in veterinarians)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="card-title">Dr. @vet.User?.FirstName @vet.User?.LastName</h3>
+                            <h6 class="card-subtitle mb-2 text-muted">@vet.Specialization</h6>
+                            <p class="card-text">@vet.Biography</p>
+                            
+                            <h5 class="mt-4">Services</h5>
+                            <ul class="list-group mb-3">
+                                @foreach (var service in vet.Services.Select(vs => vs.Service))
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        @service?.Name
+                                        <span class="badge bg-primary rounded-pill">$@service?.Price</span>
+                                    </li>
+                                }
+                            </ul>
+                            
+                            <h5>Availability</h5>
+                            <div class="small mb-3">
+                                @foreach (var workDay in vet.WorkingHours.OrderBy(wh => (int)wh.DayOfWeek).GroupBy(wh => wh.DayOfWeek))
+                                {
+                                    <div><strong>@workDay.Key:</strong> @FormatWorkHours(workDay)</div>
+                                }
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="/appointments/book/@vet.Id" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-calendar-plus me-2"></i>Book Appointment
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Veterinarian>? veterinarians;
+    private bool loading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVeterinarians();
+    }
+    
+    private async Task LoadVeterinarians()
+    {
+        try
+        {
+            veterinarians = await DbContext.Veterinarians
+                .Where(v => v.IsAvailable)
+                .Include(v => v.User)
+                .Include(v => v.Services)
+                    .ThenInclude(vs => vs.Service)
+                .Include(v => v.WorkingHours)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading veterinarians: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private string FormatWorkHours(IGrouping<SimpleVetBooking.Data.Models.DayOfWeek, WorkingHour> workHours)
+    {
+        if (!workHours.Any())
+            return "Closed";
+            
+        var formattedHours = workHours
+            .OrderBy(wh => wh.StartTime)
+            .Select(wh => $"{wh.StartTime:hh\\:mm} - {wh.EndTime:hh\\:mm}")
+            .ToList();
+            
+        return string.Join(", ", formattedHours);
+    }
+} 

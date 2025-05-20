@@ -1,0 +1,345 @@
+@page "/vet/availability"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Manage Availability</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Manage Availability</h1>
+
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isVeterinarian)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have veterinarian privileges to access this page.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Working Hours</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <p>Set your regular working hours below. Clients will be able to book appointments during these hours.</p>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Available</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+                                    }
+                                    
+                                    @for (int i = 0; i < days.Length; i++)
+                                    {
+                                        var dayIndex = i;
+                                        <tr>
+                                            <td>@days[i]</td>
+                                            <td>
+                                                <select class="form-select" @bind="workingHours[dayIndex].StartTime">
+                                                    @for (int h = 8; h <= 18; h++)
+                                                    {
+                                                        <option value="@($"{h:D2}:00")">@($"{h:D2}:00")</option>
+                                                        <option value="@($"{h:D2}:30")">@($"{h:D2}:30")</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select" @bind="workingHours[dayIndex].EndTime">
+                                                    @for (int h = 8; h <= 19; h++)
+                                                    {
+                                                        <option value="@($"{h:D2}:00")">@($"{h:D2}:00")</option>
+                                                        <option value="@($"{h:D2}:30")">@($"{h:D2}:30")</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" @bind="workingHours[dayIndex].IsAvailable">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-primary" @onclick="SaveWorkingHours">
+                                <i class="bi bi-check-circle me-2"></i>Save Working Hours
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Time Off</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <div class="d-flex gap-2">
+                                <input type="date" class="form-control" @bind="timeOffStartDate">
+                                <span class="align-self-center">to</span>
+                                <input type="date" class="form-control" @bind="timeOffEndDate">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <select class="form-select" @bind="timeOffReason">
+                                <option value="Vacation">Vacation</option>
+                                <option value="Sick Leave">Sick Leave</option>
+                                <option value="Professional Development">Professional Development</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" rows="3" @bind="timeOffNotes"></textarea>
+                        </div>
+                        
+                        <button class="btn btn-primary" @onclick="RequestTimeOff">
+                            <i class="bi bi-calendar-plus me-2"></i>Request Time Off
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Upcoming Time Off</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (timeOffList.Count == 0)
+                        {
+                            <p class="text-muted">No upcoming time off scheduled.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var timeOff in timeOffList)
+                                {
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>@timeOff.StartDate.ToString("MMM d") - @timeOff.EndDate.ToString("MMM d, yyyy")</strong>
+                                                <div class="text-muted">@timeOff.Reason</div>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteTimeOff(timeOff.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    
+    // Working hours
+    private class DayWorkingHours
+    {
+        public string Day { get; set; } = "";
+        public string StartTime { get; set; } = "09:00";
+        public string EndTime { get; set; } = "17:00";
+        public bool IsAvailable { get; set; } = true;
+    }
+    
+    private DayWorkingHours[] workingHours = new DayWorkingHours[7] {
+        new DayWorkingHours { Day = "Monday" },
+        new DayWorkingHours { Day = "Tuesday" },
+        new DayWorkingHours { Day = "Wednesday" },
+        new DayWorkingHours { Day = "Thursday" },
+        new DayWorkingHours { Day = "Friday" },
+        new DayWorkingHours { Day = "Saturday", IsAvailable = false },
+        new DayWorkingHours { Day = "Sunday", IsAvailable = false }
+    };
+    
+    // Time off
+    private DateTime timeOffStartDate = DateTime.Today.AddDays(1);
+    private DateTime timeOffEndDate = DateTime.Today.AddDays(3);
+    private string timeOffReason = "Vacation";
+    private string timeOffNotes = "";
+    
+    private class TimeOff
+    {
+        public int Id { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string Reason { get; set; } = "";
+        public string Notes { get; set; } = "";
+    }
+    
+    private List<TimeOff> timeOffList = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user and check if they are a veterinarian
+            var appUser = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (appUser == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = appUser.IsVeterinarian;
+            
+            if (!isVeterinarian)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            
+            // Get the veterinarian profile
+            veterinarian = await DbContext.Veterinarians
+                .Include(v => v.User)
+                .FirstOrDefaultAsync(v => v.UserId == userId);
+                
+            if (veterinarian == null)
+            {
+                return;
+            }
+            
+            // In a real app, we would load the actual working hours from database
+            // For now, we're using the default values in the workingHours array
+            
+            // Load time off data (mock data for now)
+            timeOffList = new List<TimeOff>
+            {
+                new TimeOff
+                {
+                    Id = 1,
+                    StartDate = DateTime.Today.AddDays(30),
+                    EndDate = DateTime.Today.AddDays(35),
+                    Reason = "Vacation",
+                    Notes = "Annual family vacation"
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading availability: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private async Task SaveWorkingHours()
+    {
+        // In a real app, we would save the working hours to database
+        Console.WriteLine("Saving working hours...");
+        
+        // Mock success message
+        await Task.Delay(500); // Simulate server delay
+        
+        // Show a success message (would implement a toast notification in a real app)
+        Console.WriteLine("Working hours saved successfully");
+    }
+    
+    private async Task RequestTimeOff()
+    {
+        if (timeOffStartDate > timeOffEndDate)
+        {
+            // Show error message
+            Console.WriteLine("Error: Start date must be before end date");
+            return;
+        }
+        
+        // In a real app, we would save the time off request to database
+        Console.WriteLine($"Requesting time off from {timeOffStartDate.ToShortDateString()} to {timeOffEndDate.ToShortDateString()}");
+        
+        // Mock adding the time off to the list
+        var newTimeOff = new TimeOff
+        {
+            Id = timeOffList.Count + 1,
+            StartDate = timeOffStartDate,
+            EndDate = timeOffEndDate,
+            Reason = timeOffReason,
+            Notes = timeOffNotes
+        };
+        
+        timeOffList.Add(newTimeOff);
+        
+        // Reset the form
+        timeOffStartDate = DateTime.Today.AddDays(1);
+        timeOffEndDate = DateTime.Today.AddDays(3);
+        timeOffReason = "Vacation";
+        timeOffNotes = "";
+        
+        // Show a success message
+        Console.WriteLine("Time off requested successfully");
+    }
+    
+    private void DeleteTimeOff(int id)
+    {
+        // In a real app, we would delete from database
+        var timeOff = timeOffList.FirstOrDefault(t => t.Id == id);
+        if (timeOff != null)
+        {
+            timeOffList.Remove(timeOff);
+            Console.WriteLine($"Time off from {timeOff.StartDate.ToShortDateString()} to {timeOff.EndDate.ToShortDateString()} deleted");
+        }
+    }
+} 

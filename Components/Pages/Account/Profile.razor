@@ -1,0 +1,239 @@
+@page "/account/profile"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>My Profile</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">My Profile</h1>
+
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (user == null)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">User Not Found</h4>
+            <p>We couldn't find your user profile. Please log out and log back in.</p>
+            <a href="/logout" class="btn btn-primary">Logout</a>
+        </div>
+    }
+    else
+    {
+        @if (showSuccessMessage)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> Your profile has been updated.
+                <button type="button" class="btn-close" @onclick="() => showSuccessMessage = false"></button>
+            </div>
+        }
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Personal Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <form @onsubmit="SaveProfile">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" @bind="user.FirstName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" @bind="user.LastName" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" @bind="user.Email" required disabled>
+                                <div class="form-text">Email address cannot be changed</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" @bind="user.PhoneNumber">
+                            </div>
+                            
+                            @if (isVeterinarian && veterinarian != null)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" class="form-control" @bind="veterinarian.Specialization">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Bio</label>
+                                    <textarea class="form-control" rows="4" @bind="veterinarian.Bio"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Years of Experience</label>
+                                    <input type="number" class="form-control" @bind="veterinarian.YearsOfExperience" min="0" max="50">
+                                </div>
+                            }
+                            
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Account Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-5">Account Type</dt>
+                            <dd class="col-sm-7">@(isVeterinarian ? "Veterinarian" : "Client")</dd>
+                            
+                            <dt class="col-sm-5">Joined</dt>
+                            <dd class="col-sm-7">@user.CreatedAt.ToString("MMMM d, yyyy")</dd>
+                        </dl>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="/account/change-password" class="btn btn-outline-primary">
+                                <i class="bi bi-key me-2"></i>Change Password
+                            </a>
+                            
+                            @if (!isVeterinarian)
+                            {
+                                <a href="/account/pets" class="btn btn-outline-primary">
+                                    <i class="bi bi-journal-medical me-2"></i>Manage My Pets
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                @if (isVeterinarian && veterinarian != null)
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0">Veterinarian Dashboard</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="/vet/dashboard" class="btn btn-outline-primary">
+                                    <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                                </a>
+                                <a href="/vet/appointments" class="btn btn-outline-primary">
+                                    <i class="bi bi-calendar-check me-2"></i>Manage Appointments
+                                </a>
+                                <a href="/vet/patients" class="btn btn-outline-primary">
+                                    <i class="bi bi-clipboard2-pulse me-2"></i>View Patients
+                                </a>
+                                <a href="/vet/availability" class="btn btn-outline-primary">
+                                    <i class="bi bi-clock me-2"></i>Set Availability
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private bool showSuccessMessage = false;
+    private AppUser? user;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var claimsPrincipal = authState.User;
+            
+            if (claimsPrincipal.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user
+            user = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (user == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = user.IsVeterinarian;
+            
+            // If user is a veterinarian, load their veterinarian profile
+            if (isVeterinarian)
+            {
+                veterinarian = await DbContext.Veterinarians
+                    .FirstOrDefaultAsync(v => v.UserId == userId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user profile: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private async Task SaveProfile()
+    {
+        try
+        {
+            if (user == null) return;
+            
+            // Update user in database
+            DbContext.Users.Update(user);
+            
+            // If veterinarian, update their profile too
+            if (isVeterinarian && veterinarian != null)
+            {
+                DbContext.Veterinarians.Update(veterinarian);
+            }
+            
+            await DbContext.SaveChangesAsync();
+            
+            // Show success message
+            showSuccessMessage = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving profile: {ex.Message}");
+        }
+    }
+} 

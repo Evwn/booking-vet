@@ -1,0 +1,178 @@
+@page "/vet/patients"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Patient Management</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Patient Management</h1>
+
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isVeterinarian)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have veterinarian privileges to access this page.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Patient List</h4>
+                
+                @if (pets.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No patients found.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Owner</th>
+                                    <th>Species</th>
+                                    <th>Breed</th>
+                                    <th>Age</th>
+                                    <th>Last Visit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pet in pets)
+                                {
+                                    <tr>
+                                        <td>@pet.Name</td>
+                                        <td>@pet.Owner?.FirstName @pet.Owner?.LastName</td>
+                                        <td>@pet.Species</td>
+                                        <td>@pet.Breed</td>
+                                        <td>@CalculateAge(pet.DateOfBirth) years</td>
+                                        <td>@(pet.Appointments?.OrderByDescending(a => a.StartTime).FirstOrDefault()?.StartTime.ToString("MM/dd/yyyy") ?? "No visits")</td>
+                                        <td>
+                                            <a href="/vet/patients/@pet.Id" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    private List<Pet> pets = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user and check if they are a veterinarian
+            var appUser = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (appUser == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = appUser.IsVeterinarian;
+            
+            if (!isVeterinarian)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            
+            // Get the veterinarian profile
+            veterinarian = await DbContext.Veterinarians
+                .Include(v => v.User)
+                .FirstOrDefaultAsync(v => v.UserId == userId);
+                
+            if (veterinarian == null)
+            {
+                return;
+            }
+            
+            // Load all pets with past appointments for this veterinarian
+            var petsWithAppointments = await DbContext.Appointments
+                .Where(a => a.VeterinarianId == veterinarian.Id)
+                .Select(a => a.Pet)
+                .Distinct()
+                .ToListAsync();
+                
+            // Load owner information and appointments
+            foreach (var pet in petsWithAppointments.Where(p => p != null))
+            {
+                var petWithDetails = await DbContext.Pets
+                    .Include(p => p.Owner)
+                    .Include(p => p.Appointments)
+                    .FirstOrDefaultAsync(p => p.Id == pet.Id);
+                    
+                if (petWithDetails != null)
+                {
+                    pets.Add(petWithDetails);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading patients: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+} 

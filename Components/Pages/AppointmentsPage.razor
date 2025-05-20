@@ -1,0 +1,242 @@
+@page "/appointments"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using System.Web
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>My Appointments</PageTitle>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Appointments</h1>
+        <a href="/appointments/book" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Book New Appointment
+        </a>
+    </div>
+    
+    @if (showSuccessMessage)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Success!</strong> Your appointment has been booked successfully. Our staff will review and confirm your appointment soon.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="DismissAlert"></button>
+        </div>
+    }
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span>Upcoming Appointments</span>
+            <a href="/appointments/book" class="btn btn-light btn-sm">Book New Appointment</a>
+        </div>
+        <div class="card-body">
+            @if (loading)
+            {
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (upcomingAppointments == null || !upcomingAppointments.Any())
+            {
+                <div class="alert alert-info">
+                    You don't have any upcoming appointments.
+                    <a href="/appointments/book" class="alert-link">Book one now!</a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Veterinarian</th>
+                                <th>Service</th>
+                                <th>Pet</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appointment in upcomingAppointments)
+                            {
+                                <tr>
+                                    <td>@appointment.StartTime.ToString("MMM dd, yyyy h:mm tt")</td>
+                                    <td>Dr. @appointment.Veterinarian?.User?.FirstName @appointment.Veterinarian?.User?.LastName</td>
+                                    <td>@appointment.Service?.Name</td>
+                                    <td>@appointment.Pet?.Name</td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(appointment.Status)">
+                                            @appointment.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="/appointments/details/@appointment.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                            @if (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed)
+                                            {
+                                                <button @onclick="() => CancelAppointment(appointment.Id)" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <span>Past Appointments</span>
+        </div>
+        <div class="card-body">
+            @if (loading)
+            {
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (pastAppointments == null || !pastAppointments.Any())
+            {
+                <div class="alert alert-info">You don't have any past appointments.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Veterinarian</th>
+                                <th>Service</th>
+                                <th>Pet</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appointment in pastAppointments)
+                            {
+                                <tr>
+                                    <td>@appointment.StartTime.ToString("MMM dd, yyyy h:mm tt")</td>
+                                    <td>Dr. @appointment.Veterinarian?.User?.FirstName @appointment.Veterinarian?.User?.LastName</td>
+                                    <td>@appointment.Service?.Name</td>
+                                    <td>@appointment.Pet?.Name</td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(appointment.Status)">
+                                            @appointment.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/appointments/details/@appointment.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    
+    private List<Appointment>? upcomingAppointments;
+    private List<Appointment>? pastAppointments;
+    private bool loading = true;
+    private string? userId;
+    private bool showSuccessMessage = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask!;
+        var user = authState.User;
+        
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            await LoadAppointments();
+            
+            // Check for success parameter in the URL
+            var uri = new Uri(NavigationManager.Uri);
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            showSuccessMessage = queryParams["success"] == "true";
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login", true);
+        }
+    }
+    
+    private async Task LoadAppointments()
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            
+            var appointments = await DbContext.Appointments
+                .Where(a => a.ClientId == userId)
+                .Include(a => a.Veterinarian)
+                    .ThenInclude(v => v!.User)
+                .Include(a => a.Service)
+                .Include(a => a.Pet)
+                .ToListAsync();
+                
+            upcomingAppointments = appointments
+                .Where(a => a.StartTime >= now)
+                .OrderBy(a => a.StartTime)
+                .ToList();
+                
+            pastAppointments = appointments
+                .Where(a => a.StartTime < now)
+                .OrderByDescending(a => a.StartTime)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading appointments: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private async Task CancelAppointment(int appointmentId)
+    {
+        var appointment = await DbContext.Appointments.FindAsync(appointmentId);
+        if (appointment != null && appointment.ClientId == userId)
+        {
+            appointment.Status = AppointmentStatus.Cancelled;
+            await DbContext.SaveChangesAsync();
+            await LoadAppointments();
+        }
+    }
+    
+    private string GetStatusBadgeClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "bg-warning",
+        AppointmentStatus.Confirmed => "bg-success",
+        AppointmentStatus.Completed => "bg-info",
+        AppointmentStatus.Cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
+    
+    private void DismissAlert()
+    {
+        showSuccessMessage = false;
+    }
+} 

@@ -1,0 +1,264 @@
+@page "/vet/dashboard"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Veterinarian Dashboard</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Veterinarian Dashboard</h1>
+    
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isVeterinarian)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have veterinarian privileges to access this page.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="card-title">Welcome, Dr. @(veterinarian?.User?.FirstName ?? "") @(veterinarian?.User?.LastName ?? "")</h2>
+                        <p class="card-text">@(veterinarian?.Specialization ?? "Veterinarian")</p>
+                        
+                        <div class="mt-4">
+                            <h5>Today's Stats</h5>
+                            <div class="row">
+                                <div class="col-6 mb-3">
+                                    <div class="p-3 bg-primary text-white rounded text-center">
+                                        <div class="h3">@todayAppointments.Count</div>
+                                        <div>Appointments Today</div>
+                                    </div>
+                                </div>
+                                <div class="col-6 mb-3">
+                                    <div class="p-3 bg-success text-white rounded text-center">
+                                        <div class="h3">@upcomingAppointments.Count</div>
+                                        <div>Upcoming Appointments</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title d-flex justify-content-between align-items-center">
+                            <span>Today's Schedule</span>
+                            <span class="badge bg-secondary">@DateTime.Now.ToString("dddd, MMMM d")</span>
+                        </h4>
+                        @if (todayAppointments.Count == 0)
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                You have no appointments scheduled for today.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group mt-3">
+                                @foreach (var appointment in todayAppointments.OrderBy(a => a.StartTime.TimeOfDay))
+                                {
+                                    <div class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                @appointment.StartTime.ToString("h:mm tt") - @appointment.EndTime.ToString("h:mm tt")
+                                            </h5>
+                                            <small class="text-@GetStatusClass(appointment.Status)">
+                                                @appointment.Status.ToString()
+                                            </small>
+                                        </div>
+                                        <p class="mb-1">
+                                            <strong>Pet:</strong> @appointment.Pet?.Name (@appointment.Pet?.Species)
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Service:</strong> @appointment.Service?.Name
+                                        </p>
+                                        <small>
+                                            <a href="/vet/appointments/@appointment.Id" class="btn btn-sm btn-outline-primary mt-2">
+                                                View Details
+                                            </a>
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upcoming appointments -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">Upcoming Appointments</h4>
+                @if (upcomingAppointments.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        You have no upcoming appointments scheduled.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Client</th>
+                                    <th>Pet</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var appointment in upcomingAppointments.OrderBy(a => a.StartTime))
+                                {
+                                    <tr>
+                                        <td>@appointment.StartTime.ToString("MM/dd/yyyy")</td>
+                                        <td>@appointment.StartTime.ToString("h:mm tt") - @appointment.EndTime.ToString("h:mm tt")</td>
+                                        <td>@appointment.Client?.FirstName @appointment.Client?.LastName</td>
+                                        <td>@appointment.Pet?.Name (@appointment.Pet?.Species)</td>
+                                        <td>@appointment.Service?.Name</td>
+                                        <td><span class="badge bg-@GetStatusClass(appointment.Status)">@appointment.Status.ToString()</span></td>
+                                        <td>
+                                            <a href="/vet/appointments/@appointment.Id" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    private List<Appointment> todayAppointments = new();
+    private List<Appointment> upcomingAppointments = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user and check if they are a veterinarian
+            var appUser = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (appUser == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = appUser.IsVeterinarian;
+            
+            if (!isVeterinarian)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            
+            // Get the veterinarian profile
+            veterinarian = await DbContext.Veterinarians
+                .Include(v => v.User)
+                .FirstOrDefaultAsync(v => v.UserId == userId);
+                
+            if (veterinarian == null)
+            {
+                Console.WriteLine("No veterinarian profile found for user ID: " + userId);
+                return;
+            }
+            
+            // Get today's appointments
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            
+            todayAppointments = await DbContext.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Include(a => a.Client)
+                .Where(a => a.VeterinarianId == veterinarian.Id && 
+                       a.StartTime >= today && 
+                       a.StartTime < tomorrow)
+                .ToListAsync();
+                
+            // Get upcoming appointments (next 7 days excluding today)
+            var nextWeek = today.AddDays(7);
+            
+            upcomingAppointments = await DbContext.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Include(a => a.Client)
+                .Where(a => a.VeterinarianId == veterinarian.Id && 
+                       a.StartTime >= tomorrow && 
+                       a.StartTime < nextWeek)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private string GetStatusClass(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Pending => "warning",
+            AppointmentStatus.Confirmed => "success",
+            AppointmentStatus.Completed => "info",
+            AppointmentStatus.Cancelled => "danger",
+            _ => "secondary"
+        };
+    }
+} 

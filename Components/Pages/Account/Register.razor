@@ -1,0 +1,212 @@
+@page "/register"
+@using Microsoft.AspNetCore.Identity
+@using SimpleVetBooking.Data.Models
+@using System.ComponentModel.DataAnnotations
+@using SimpleVetBooking.Components.Account
+@using Microsoft.AspNetCore.Components.Forms
+@inject UserManager<AppUser> UserManager
+@inject IUserStore<AppUser> UserStore
+@inject SignInManager<AppUser> SignInManager
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Register</PageTitle>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">Create a new account</h2>
+                </div>
+                <div class="card-body">
+                    <StatusMessage />
+                    <div class="row">
+                        <div class="col">
+                            <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary class="text-danger" role="alert" />
+
+                                @if (!string.IsNullOrEmpty(ErrorMessage))
+                                {
+                                    <div class="alert alert-danger" role="alert">
+                                        @ErrorMessage
+                                    </div>
+                                }
+
+                                <div class="form-floating mb-3">
+                                    <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="John" />
+                                    <label for="firstname">First Name</label>
+                                    <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                                </div>
+
+                                <div class="form-floating mb-3">
+                                    <InputText @bind-Value="Input.LastName" class="form-control" autocomplete="lastname" aria-required="true" placeholder="Doe" />
+                                    <label for="lastname">Last Name</label>
+                                    <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                                </div>
+
+                                <div class="form-floating mb-3">
+                                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                                    <label for="email">Email</label>
+                                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                                    <label for="password">Password</label>
+                                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                                    <label for="confirm-password">Confirm Password</label>
+                                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                                </div>
+
+                                <div class="form-floating mb-3">
+                                    <InputTextArea @bind-Value="Input.Address" class="form-control" style="height: 100px" placeholder="Your address" />
+                                    <label for="address">Address</label>
+                                    <ValidationMessage For="() => Input.Address" class="text-danger" />
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-lg btn-primary" disabled="@IsLoading">
+                                        @if (IsLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                            <span class="ms-2">Registering...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Register</span>
+                                        }
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <p>
+                            <a href="login">Already have an account? Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? ErrorMessage { get; set; }
+    private bool IsLoading { get; set; } = false;
+    private bool _shouldRedirect = false;
+    private string _redirectUrl = string.Empty;
+
+    private IUserEmailStore<AppUser> EmailStore => (IUserEmailStore<AppUser>)UserStore;
+    
+    protected override void OnInitialized()
+    {
+        // If the user is already logged in, redirect them away
+        if (SignInManager.IsSignedIn(HttpContext.User))
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_shouldRedirect)
+        {
+            _shouldRedirect = false;
+            JSRuntime.InvokeVoidAsync("window.location.href", _redirectUrl);
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    public async Task RegisterUser()
+    {
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+
+            var user = new AppUser
+            {
+                FirstName = Input.FirstName,
+                LastName = Input.LastName,
+                Address = Input.Address,
+                IsVeterinarian = false
+            };
+
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            await EmailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            var result = await UserManager.CreateAsync(user, Input.Password);
+
+            if (!result.Succeeded)
+            {
+                ErrorMessage = $"Error: {string.Join(", ", result.Errors.Select(error => error.Description))}";
+                IsLoading = false;
+                StateHasChanged();
+                return;
+            }
+
+            Logger.LogInformation("User created a new account with password.");
+
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            
+            // Set a success cookie
+            HttpContext.Response.Cookies.Append("Identity.StatusMessage", "Your account has been created successfully.");
+            
+            // Use direct HTTP response redirect instead of JavaScript
+            HttpContext.Response.Redirect(ReturnUrl ?? "/");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error during registration: {ex.Message}";
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = "";
+
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+    }
+} 

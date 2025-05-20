@@ -1,0 +1,222 @@
+@page "/appointments/details/{Id:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<PageTitle>Appointment Details</PageTitle>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Appointment Details</h1>
+        <a href="/appointments" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Appointments
+        </a>
+    </div>
+    
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (appointment == null)
+    {
+        <div class="alert alert-danger">
+            Appointment not found or you don't have permission to view it.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Appointment #@appointment.Id</h5>
+                <span class="badge @GetStatusBadgeClass(appointment.Status)">
+                    @appointment.Status
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-title">Appointment Information</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Date:</dt>
+                            <dd class="col-sm-8">@appointment.StartTime.ToLocalTime().ToString("dddd, MMMM d, yyyy")</dd>
+                            
+                            <dt class="col-sm-4">Time:</dt>
+                            <dd class="col-sm-8">@appointment.StartTime.ToLocalTime().ToString("h:mm tt") - @appointment.EndTime.ToLocalTime().ToString("h:mm tt")</dd>
+                            
+                            <dt class="col-sm-4">Service:</dt>
+                            <dd class="col-sm-8">@appointment.Service?.Name</dd>
+                            
+                            <dt class="col-sm-4">Price:</dt>
+                            <dd class="col-sm-8">$@appointment.Service?.Price</dd>
+                            
+                            <dt class="col-sm-4">Duration:</dt>
+                            <dd class="col-sm-8">@appointment.Service?.DurationMinutes minutes</dd>
+                            
+                            <dt class="col-sm-4">Scheduled on:</dt>
+                            <dd class="col-sm-8">@appointment.CreatedAt.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</dd>
+                        </dl>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="card-title">Veterinarian</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">Dr. @(appointment.Veterinarian?.User?.FirstName ?? "") @(appointment.Veterinarian?.User?.LastName ?? "")</dd>
+                            
+                            <dt class="col-sm-4">Specialty:</dt>
+                            <dd class="col-sm-8">@(appointment.Veterinarian?.Specialization ?? "Not specified")</dd>
+                        </dl>
+                        
+                        <h5 class="card-title mt-4">Pet Information</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">@appointment.Pet?.Name</dd>
+                            
+                            <dt class="col-sm-4">Species:</dt>
+                            <dd class="col-sm-8">@appointment.Pet?.Species</dd>
+                            
+                            <dt class="col-sm-4">Breed:</dt>
+                            <dd class="col-sm-8">@appointment.Pet?.Breed</dd>
+                            
+                            <dt class="col-sm-4">Age:</dt>
+                            <dd class="col-sm-8">@(appointment.Pet != null ? CalculateAge(appointment.Pet.DateOfBirth) : 0) years</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(appointment.Notes))
+                {
+                    <div class="mt-4">
+                        <h5 class="card-title">Notes</h5>
+                        <div class="p-3 bg-light rounded">
+                            @appointment.Notes
+                        </div>
+                    </div>
+                }
+                
+                <div class="mt-4">
+                    <h5 class="card-title">Status History</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-success me-2">Created</span>
+                                Appointment was scheduled
+                            </div>
+                            <small class="text-muted">@appointment.CreatedAt.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                        </li>
+                        @if (appointment.Status != AppointmentStatus.Pending)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge @GetStatusBadgeClass(appointment.Status) me-2">@appointment.Status</span>
+                                    Appointment was @appointment.Status.ToString().ToLower()
+                                </div>
+                                <small class="text-muted">@DateTime.UtcNow.AddDays(-1).ToLocalTime().ToString("MMM d, yyyy h:mm tt")</small>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="/appointments" class="btn btn-outline-secondary">Back to Appointments</a>
+                    
+                    @if (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed)
+                    {
+                        <button @onclick="CancelAppointment" class="btn btn-danger">
+                            Cancel Appointment
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+    
+    private Appointment? appointment;
+    private bool loading = true;
+    private string? userId;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask!;
+        var user = authState.User;
+        
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            await LoadAppointment();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+    
+    private async Task LoadAppointment()
+    {
+        try
+        {
+            appointment = await DbContext.Appointments
+                .Where(a => a.Id == Id && a.ClientId == userId)
+                .Include(a => a.Veterinarian)
+                    .ThenInclude(v => v!.User)
+                .Include(a => a.Service)
+                .Include(a => a.Pet)
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading appointment: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private async Task CancelAppointment()
+    {
+        if (appointment != null && (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed))
+        {
+            appointment.Status = AppointmentStatus.Cancelled;
+            await DbContext.SaveChangesAsync();
+            
+            // Reload the appointment
+            await LoadAppointment();
+        }
+    }
+    
+    private string GetStatusBadgeClass(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Pending => "bg-warning",
+        AppointmentStatus.Confirmed => "bg-success",
+        AppointmentStatus.Completed => "bg-info",
+        AppointmentStatus.Cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
+    
+    private int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+} 

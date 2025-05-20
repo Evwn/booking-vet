@@ -1,0 +1,474 @@
+@page "/vet/appointments"
+@page "/vet/appointments/{AppointmentId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Appointment Management</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">
+        @if (AppointmentId.HasValue)
+        {
+            <span>Appointment Details</span>
+        }
+        else
+        {
+            <span>My Schedule</span>
+        }
+    </h1>
+
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isVeterinarian)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have veterinarian privileges to access this page.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    }
+    else if (AppointmentId.HasValue && selectedAppointment == null)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Appointment Not Found</h4>
+            <p>The appointment you are looking for does not exist or you don't have permission to view it.</p>
+            <a href="/vet/appointments" class="btn btn-primary">Back to Appointments</a>
+        </div>
+    }
+    else if (AppointmentId.HasValue && selectedAppointment != null)
+    {
+        <!-- Single appointment detail view -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Appointment #@selectedAppointment.Id</h4>
+                <span class="badge bg-@GetStatusClass(selectedAppointment.Status)">
+                    @selectedAppointment.Status.ToString()
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="card-title">Appointment Details</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Date:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.StartTime.ToString("MMMM d, yyyy")</dd>
+                            
+                            <dt class="col-sm-4">Time:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.StartTime.ToString("h:mm tt") - @selectedAppointment.EndTime.ToString("h:mm tt")</dd>
+                            
+                            <dt class="col-sm-4">Service:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Service?.Name</dd>
+                            
+                            <dt class="col-sm-4">Duration:</dt>
+                            <dd class="col-sm-8">@((selectedAppointment.EndTime - selectedAppointment.StartTime).TotalMinutes) minutes</dd>
+                        </dl>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="card-title">Client Information</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Client:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Client?.FirstName @selectedAppointment.Client?.LastName</dd>
+                            
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Client?.Email</dd>
+                            
+                            <dt class="col-sm-4">Phone:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Client?.PhoneNumber</dd>
+                        </dl>
+                        
+                        <h5 class="card-title mt-3">Pet Information</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Pet?.Name</dd>
+                            
+                            <dt class="col-sm-4">Species:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Pet?.Species</dd>
+                            
+                            <dt class="col-sm-4">Breed:</dt>
+                            <dd class="col-sm-8">@selectedAppointment.Pet?.Breed</dd>
+                            
+                            <dt class="col-sm-4">Age:</dt>
+                            <dd class="col-sm-8">@(selectedAppointment.Pet != null ? CalculateAge(selectedAppointment.Pet.DateOfBirth) : 0) years</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(selectedAppointment.Notes))
+                {
+                    <div class="mt-4">
+                        <h5 class="card-title">Notes</h5>
+                        <div class="p-3 bg-light rounded">
+                            @selectedAppointment.Notes
+                        </div>
+                    </div>
+                }
+                
+                <div class="mt-4">
+                    <h5 class="card-title">Update Status</h5>
+                    <div class="d-flex gap-2">
+                        @if (selectedAppointment.Status != AppointmentStatus.Confirmed)
+                        {
+                            <a href="/api/booking/vet/appointments/status/@selectedAppointment.Id/confirmed" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Confirm
+                            </a>
+                        }
+                        
+                        @if (selectedAppointment.Status != AppointmentStatus.Completed)
+                        {
+                            <a href="/api/booking/vet/appointments/status/@selectedAppointment.Id/completed" class="btn btn-info">
+                                <i class="bi bi-clipboard-check me-2"></i>Mark as Completed
+                            </a>
+                        }
+                        
+                        @if (selectedAppointment.Status != AppointmentStatus.Cancelled)
+                        {
+                            <a href="/api/booking/vet/appointments/status/@selectedAppointment.Id/cancelled" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/vet/appointments" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to All Appointments
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Appointments listing view -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Filter Appointments</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" @bind="selectedDateRange">
+                                    <option value="today">Today</option>
+                                    <option value="tomorrow">Tomorrow</option>
+                                    <option value="thisweek">This Week</option>
+                                    <option value="nextweek">Next Week</option>
+                                    <option value="thismonth">This Month</option>
+                                    <option value="all">All Upcoming</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" @bind="selectedStatus">
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" @onclick="ApplyFilters">
+                                    <i class="bi bi-funnel me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">@GetFilterTitle()</h4>
+                
+                @if (filteredAppointments.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No appointments found with the current filters.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Client</th>
+                                    <th>Pet</th>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var appointment in filteredAppointments.OrderBy(a => a.StartTime))
+                                {
+                                    <tr>
+                                        <td>@appointment.StartTime.ToString("MM/dd/yyyy")</td>
+                                        <td>@appointment.StartTime.ToString("h:mm tt")</td>
+                                        <td>@appointment.Client?.FirstName @appointment.Client?.LastName</td>
+                                        <td>@appointment.Pet?.Name (@appointment.Pet?.Species)</td>
+                                        <td>@appointment.Service?.Name</td>
+                                        <td><span class="badge bg-@GetStatusClass(appointment.Status)">@appointment.Status.ToString()</span></td>
+                                        <td>
+                                            <a href="/vet/appointments/@appointment.Id" class="btn btn-sm btn-primary me-1">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int? AppointmentId { get; set; }
+    
+    private bool loading = true;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    private List<Appointment> allAppointments = new();
+    private List<Appointment> filteredAppointments = new();
+    private Appointment? selectedAppointment;
+    
+    // Filters
+    private string selectedDateRange = "today";
+    private string selectedStatus = "all";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user and check if they are a veterinarian
+            var appUser = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (appUser == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = appUser.IsVeterinarian;
+            
+            if (!isVeterinarian)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            
+            // Get the veterinarian profile
+            veterinarian = await DbContext.Veterinarians
+                .Include(v => v.User)
+                .FirstOrDefaultAsync(v => v.UserId == userId);
+                
+            if (veterinarian == null)
+            {
+                Console.WriteLine("No veterinarian profile found for user ID: " + userId);
+                return;
+            }
+            
+            // If viewing a specific appointment
+            if (AppointmentId.HasValue)
+            {
+                Console.WriteLine($"Loading appointment details for ID: {AppointmentId.Value}");
+                selectedAppointment = await DbContext.Appointments
+                    .Include(a => a.Pet)
+                    .Include(a => a.Service)
+                    .Include(a => a.Client)
+                    .Include(a => a.Veterinarian)
+                    .FirstOrDefaultAsync(a => a.Id == AppointmentId.Value && a.VeterinarianId == veterinarian.Id);
+                    
+                if (selectedAppointment == null)
+                {
+                    Console.WriteLine($"No appointment found with ID {AppointmentId.Value} for vet ID {veterinarian.Id}");
+                }
+                else
+                {
+                    Console.WriteLine($"Found appointment: {selectedAppointment.Id}, Status: {selectedAppointment.Status}");
+                }
+            }
+            else
+            {
+                await LoadAllAppointments();
+                ApplyFilters();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading appointments: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private async Task LoadAllAppointments()
+    {
+        if (veterinarian == null) return;
+        
+        allAppointments = await DbContext.Appointments
+            .Include(a => a.Pet)
+            .Include(a => a.Service)
+            .Include(a => a.Client)
+            .Where(a => a.VeterinarianId == veterinarian.Id)
+            .ToListAsync();
+    }
+    
+    private void ApplyFilters()
+    {
+        // Start with all appointments
+        var query = allAppointments.AsQueryable();
+        
+        // Apply date range filter
+        var today = DateTime.Today;
+        query = selectedDateRange switch
+        {
+            "today" => query.Where(a => a.StartTime.Date == today),
+            "tomorrow" => query.Where(a => a.StartTime.Date == today.AddDays(1)),
+            "thisweek" => query.Where(a => a.StartTime.Date >= today && 
+                                   a.StartTime.Date <= today.AddDays(7 - (int)today.DayOfWeek)),
+            "nextweek" => query.Where(a => a.StartTime.Date > today.AddDays(7 - (int)today.DayOfWeek) && 
+                                   a.StartTime.Date <= today.AddDays(14 - (int)today.DayOfWeek)),
+            "thismonth" => query.Where(a => a.StartTime.Month == today.Month && a.StartTime.Year == today.Year),
+            _ => query // "all" or any other value
+        };
+        
+        // Apply status filter
+        if (selectedStatus != "all")
+        {
+            AppointmentStatus status = Enum.Parse<AppointmentStatus>(selectedStatus, true);
+            query = query.Where(a => a.Status == status);
+        }
+        
+        // Get the filtered appointments
+        filteredAppointments = query.ToList();
+    }
+    
+    private string GetFilterTitle()
+    {
+        string dateRangeText = selectedDateRange switch
+        {
+            "today" => "Today's",
+            "tomorrow" => "Tomorrow's",
+            "thisweek" => "This Week's",
+            "nextweek" => "Next Week's",
+            "thismonth" => "This Month's",
+            _ => "All Upcoming"
+        };
+        
+        string statusText = selectedStatus switch
+        {
+            "pending" => "Pending",
+            "confirmed" => "Confirmed",
+            "completed" => "Completed",
+            "cancelled" => "Cancelled",
+            _ => ""
+        };
+        
+        return $"{dateRangeText} {statusText} Appointments";
+    }
+    
+    private string GetStatusClass(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Pending => "warning",
+            AppointmentStatus.Confirmed => "success",
+            AppointmentStatus.Completed => "info",
+            AppointmentStatus.Cancelled => "danger",
+            _ => "secondary"
+        };
+    }
+    
+    private int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+    
+    private async Task UpdateAppointmentStatus(AppointmentStatus newStatus)
+    {
+        if (selectedAppointment == null || veterinarian == null) return;
+        
+        try
+        {
+            Console.WriteLine($"Updating appointment #{selectedAppointment.Id} status from {selectedAppointment.Status} to {newStatus}");
+            
+            // Update the status
+            selectedAppointment.Status = newStatus;
+            
+            // Save to database
+            DbContext.Appointments.Update(selectedAppointment);
+            await DbContext.SaveChangesAsync();
+            Console.WriteLine($"Successfully updated appointment status in database");
+            
+            // Reload the appointment to get fresh data
+            selectedAppointment = await DbContext.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Include(a => a.Client)
+                .FirstOrDefaultAsync(a => a.Id == AppointmentId.Value && a.VeterinarianId == veterinarian.Id);
+                
+            if (selectedAppointment != null)
+            {
+                Console.WriteLine($"Reloaded appointment data, current status: {selectedAppointment.Status}");
+            }
+            else
+            {
+                Console.WriteLine("Failed to reload appointment data");
+            }
+            
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating appointment status: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+    }
+} 

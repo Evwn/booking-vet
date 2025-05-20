@@ -1,0 +1,1087 @@
+@page "/appointments/book"
+@page "/appointments/book/{VeterinarianId:int?}"
+@page "/appointments/book/{VeterinarianId:int}/services/{ServiceIds}"
+@page "/appointments/book/{VeterinarianId:int}/services/{ServiceIds}/confirm"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using Microsoft.AspNetCore.Authorization
+@using System
+@using System.Web
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Book Appointment</PageTitle>
+
+<div class="container my-5">
+    <h1 class="mb-4">Book an Appointment</h1>
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="progress mb-4">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: @(((currentStep) * 25) + "%")" 
+                     aria-valuenow="@currentStep" aria-valuemin="0" aria-valuemax="4">
+                    Step @currentStep of 4
+                </div>
+            </div>
+            
+            @if (loading)
+            {
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading...</p>
+                </div>
+            }
+            else
+            {
+                @switch (currentStep)
+                {
+                    case 1:
+                        <h4 class="card-title mb-4">Step 1: Choose a Veterinarian</h4>
+                        <p class="text-muted mb-4">Click "Select and Continue" on a veterinarian to proceed to the next step.</p>
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                            @if (veterinarians == null || !veterinarians.Any())
+                            {
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        No veterinarians available. Please try again later.
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var vet in veterinarians)
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 @(selectedVeterinarian?.Id == vet.Id ? "border-primary" : "")">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Dr. @(vet.User?.FirstName ?? "") @(vet.User?.LastName ?? "")</h5>
+                                                <p class="card-text"><strong>Specialty:</strong> @vet.Specialization</p>
+                                                <a href="/appointments/book/@vet.Id" class="btn btn-success w-100">
+                                                    <span><i class="bi bi-arrow-right-circle me-2"></i>Select and Continue</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        break;
+                        
+                    case 2:
+                        <h4 class="card-title mb-4">Step 2: Select Services</h4>
+                        <p class="text-muted mb-4">Select one or more services for your appointment.</p>
+                        
+                        <form method="get" action="/api/booking/proceed-to-step3">
+                            <input type="hidden" name="veterinarianId" value="@VeterinarianId" />
+                            
+                            <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                                @foreach (var service in services)
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 @(selectedServiceIds.Contains(service.Id) ? "border-primary shadow-lg" : "border")" 
+                                             style="transition: all 0.3s ease; cursor: pointer;"
+                                             @onclick="() => ToggleService(service.Id)">
+                                            
+                                            @if (selectedServiceIds.Contains(service.Id))
+                                            {
+                                                <div class="position-absolute" style="top: -10px; right: -10px; z-index: 100;">
+                                                    <div class="bg-primary text-white rounded-circle p-2">
+                                                        <i class="bi bi-check-lg fs-4"></i>
+                                                    </div>
+                                                </div>
+                                            }
+                                            
+                                            <div class="card-header @(selectedServiceIds.Contains(service.Id) ? "bg-primary text-white" : "")">
+                                                <div class="form-check d-flex align-items-center">
+                                                    <input class="form-check-input me-2" 
+                                                           type="checkbox" 
+                                                           id="service_@service.Id" 
+                                                           name="selectedServices" 
+                                                           value="@service.Id" 
+                                                           @onclick:stopPropagation
+                                                           @onchange="() => ToggleService(service.Id)"
+                                                           checked="@selectedServiceIds.Contains(service.Id)"
+                                                           style="width: 1.5rem; height: 1.5rem;" />
+                                                    <label class="form-check-label fw-bold fs-5 mb-0" for="service_@service.Id" style="cursor: pointer;">
+                                                        @service.Name
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="card-body @(selectedServiceIds.Contains(service.Id) ? "bg-light" : "")">
+                                                <p class="card-text">@service.Description</p>
+                                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                                    <span><i class="bi bi-clock me-1"></i> @service.DurationMinutes min</span>
+                                                    <span class="badge bg-success fs-5 p-2">$@service.Price</span>
+                                                </div>
+                                            </div>
+                                            
+                                            @if (selectedServiceIds.Contains(service.Id))
+                                            {
+                                                <div class="card-footer bg-primary text-white text-center">
+                                                    <strong><i class="bi bi-check-circle-fill me-2"></i>SELECTED</strong>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <a href="/appointments/book" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i> Back
+                                </a>
+                                
+                                <button type="submit" class="btn btn-primary btn-lg" >
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Continue with @(selectedServiceIds.Count > 0 ? $"{selectedServiceIds.Count} Selected Service{(selectedServiceIds.Count != 1 ? "s" : "")}" : "Selected Services")
+                                    @if (selectedServiceIds.Any())
+                                    {
+                                        <span class="ms-2 badge bg-light text-dark">$@CalculateTotalPrice()</span>
+                                    }
+                                </button>
+                            </div>
+                        </form>
+                        break;
+                        
+                    case 3:
+                        <h4 class="card-title mb-4">Step 3: Choose Date & Time</h4>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="appointmentDate" class="form-label">Select Date</label>
+                                    <input type="date" id="appointmentDate" class="form-control" 
+                                           min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           @bind="selectedDate" />
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="appointmentTime" class="form-label">Select Time</label>
+                                    <select id="appointmentTime" class="form-select" @onchange="e => UpdateSelectedTime(e.Value.ToString())">
+                                        @{
+                                            // Generate time slots for every 30 minutes from 9 AM to 5 PM
+                                            var date = DateTime.Today.Date;
+                                            for (int hour = 9; hour < 17; hour++)
+                                            {
+                                                for (int minute = 0; minute < 60; minute += 30)
+                                                {
+                                                    var timeSlot = new DateTime(date.Year, date.Month, date.Day, hour, minute, 0);
+                                                    string timeDisplay = timeSlot.ToString("h:mm tt");
+                                                    <option value="@timeSlot.ToString("yyyy-MM-ddTHH:mm:ss")" 
+                                                            selected="@(timeSlot.Hour == selectedTime.Hour && timeSlot.Minute == selectedTime.Minute)">
+                                                        @timeDisplay
+                                                    </option>
+                                                }
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Select Your Pet</label>
+                                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                                        @foreach (var pet in pets)
+                                        {
+                                            <div class="col">
+                                                <form method="post" action="/api/booking/select-pet">
+                                                    <input type="hidden" name="veterinarianId" value="@VeterinarianId" />
+                                                    <input type="hidden" name="serviceIds" value="@(string.IsNullOrEmpty(ServiceIds) ? "0" : ServiceIds)" />
+                                                    <input type="hidden" name="petId" value="@pet.Id" />
+                                                    <input type="hidden" name="date" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                                    <input type="hidden" name="time" value="@($"{selectedTime.Hour:00}-{selectedTime.Minute:00}")" />
+                                                    <input type="hidden" name="notes" value="@(notes ?? "")" />
+                                                    
+                                                    <button type="submit" class="btn p-0 w-100 border-0 text-start" style="cursor: pointer;">
+                                                        <div class="card h-100 @(selectedPetId == pet.Id ? "border-primary shadow" : "border")">
+                                                            <div class="card-body">
+                                                                <h5 class="card-title">@pet.Name</h5>
+                                                                <p class="card-text">
+                                                                    <span class="badge bg-info">@pet.Species</span>
+                                                                    <span class="badge bg-secondary">@CalculateAge(pet.DateOfBirth) years old</span>
+                                                                </p>
+                                                                @if (selectedPetId == pet.Id)
+                                                                {
+                                                                    <div class="text-primary">
+                                                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                                                        <strong>Selected</strong>
+                                                                    </div>
+                                                                }
+                                                                <div class="mt-3">
+                                                                    <div class="btn btn-primary w-100">Select @pet.Name</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="mt-2">
+                                        <span class="badge bg-info">Selected Time: @selectedTime.ToString("h:mm tt")</span>
+                                        <span class="badge bg-secondary">Selected Date: @selectedDate.ToShortDateString()</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label for="notes" class="form-label">Additional Notes</label>
+                                    <textarea id="notes" class="form-control" rows="3" 
+                                              placeholder="Please include any relevant information about your pet's condition"
+                                              @bind="notes"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <!-- Appointment summary card removed as requested -->
+                            </div>
+                        </div>
+                        
+                        @if (selectedPetId > 0 && selectedDate >= DateTime.Today && selectedTime.Hour > 0)
+                        {
+                            <div class="d-flex justify-content-center mt-4">
+                                <form method="post" action="/api/booking/select-pet">
+                                    <input type="hidden" name="veterinarianId" value="@VeterinarianId" />
+                                    <input type="hidden" name="serviceIds" value="@(string.IsNullOrEmpty(ServiceIds) ? "0" : ServiceIds)" />
+                                    <input type="hidden" name="petId" value="@selectedPetId" />
+                                    <input type="hidden" name="date" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                    <input type="hidden" name="time" value="@($"{selectedTime.Hour:00}-{selectedTime.Minute:00}")" />
+                                    <input type="hidden" name="notes" value="@(notes ?? "")" />
+                                    
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Continue to Confirmation
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mt-4">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Please select a pet by clicking on one of the pet cards above.
+                            </div>
+                        }
+                        break;
+                        
+                    case 4:
+                        <h4 class="card-title mb-4">Step 4: Confirm Booking</h4>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Appointment Details</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Veterinarian:</strong> Dr. @(selectedVeterinarian?.User?.FirstName ?? "") @(selectedVeterinarian?.User?.LastName ?? "")</p>
+                                        @if (selectedPetId > 0)
+                                        {
+                                            var selectedPet = pets.FirstOrDefault(p => p.Id == selectedPetId);
+                                            <p><strong>Pet:</strong> @(selectedPet?.Name ?? "No pet selected") (@(selectedPet?.Species ?? ""), @(selectedPet != null ? CalculateAge(selectedPet.DateOfBirth) : 0) years old)</p>
+                                        }
+                                        else
+                                        {
+                                            <p><strong>Pet:</strong> <span class="text-danger">No pet selected</span></p>
+                                        }
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Date:</strong> @selectedDate.ToShortDateString()</p>
+                                        <p><strong>Time:</strong> @selectedTime.ToString("h:mm tt")</p>
+                                        <p><strong>Duration:</strong> @CalculateAppointmentDuration() minutes</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h6>Selected Services:</h6>
+                                    <ul class="list-group">
+                                        @foreach (var serviceId in selectedServiceIds)
+                                        {
+                                            var service = services.FirstOrDefault(s => s.Id == serviceId);
+                                            if (service != null)
+                                            {
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    @service.Name
+                                                    <span class="badge bg-primary rounded-pill">$@service.Price</span>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(notes))
+                                {
+                                    <div class="mt-3">
+                                        <h6>Additional Notes:</h6>
+                                        <p class="card-text">@notes</p>
+                                    </div>
+                                }
+                                
+                                <hr />
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Total Price: $@CalculateTotalPrice()</h5>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="confirmCheck" @bind="confirmed">
+                            <label class="form-check-label" for="confirmCheck">
+                                I confirm that the information provided is correct and agree to the appointment.
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            An email confirmation will be sent once your appointment is confirmed by our staff.
+                        </div>
+                        
+                        @if (selectedPetId <= 0)
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Please go back and select a pet before confirming your booking.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                Pet selected: @(pets.FirstOrDefault(p => p.Id == selectedPetId)?.Name ?? "Unknown")
+                            </div>
+                            
+                            <div class="d-flex justify-content-center mt-4">
+                                <form method="get" action="/api/booking/submit">
+                                    <input type="hidden" name="veterinarianId" value="@VeterinarianId" />
+                                    <input type="hidden" name="serviceIds" value="@ServiceIds" />
+                                    <input type="hidden" name="petId" value="@selectedPetId" />
+                                    <input type="hidden" name="date" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                    @{
+                                        // Format time with zero-padded hours and minutes
+                                        string timeParam = $"{selectedTime.Hour:00}-{selectedTime.Minute:00}";
+                                    }
+                                    <input type="hidden" name="time" value="@timeParam" />
+                                    <input type="hidden" name="notes" value="@(notes ?? "")" />
+                                    
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Complete Booking
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        break;
+                }
+                
+                <div class="d-flex justify-content-between mt-4">
+                    @{
+                        // Determine the back URL based on current step
+                        string backUrl = currentStep switch
+                        {
+                            2 => "/appointments/book",
+                            3 => VeterinarianId.HasValue ? $"/appointments/book/{VeterinarianId}" : "/appointments/book",
+                            4 => ServiceIds != null ? $"/appointments/book/{VeterinarianId}/services/{ServiceIds}" : $"/appointments/book/{VeterinarianId}",
+                            _ => "#"
+                        };
+                    }
+                    
+                    <a href="@backUrl" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i> Back
+                    </a>
+                    
+                    @if (currentStep < 4)
+                    {
+                        @if (currentStep == 1)
+                        {
+                            <a href="/appointments/book/@(selectedVeterinarian?.Id ?? 1)" class="btn btn-primary">
+                                <span>Next <i class="bi bi-arrow-right ms-2"></i></span>
+                            </a>
+                        }
+                        else if (currentStep == 2)
+                        {
+                            <a href="/appointments/book/@VeterinarianId/services/@GetSelectedServiceIdsString()" class="btn btn-primary">
+                                <span>Next <i class="bi bi-arrow-right ms-2"></i></span>
+                            </a>
+                        }
+                        else if (currentStep == 3)
+                        {
+                            // Remove this section completely since we have direct links from pet cards
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="NextStep">
+                                <span>Next <i class="bi bi-arrow-right ms-2"></i></span>
+                            </button>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int? VeterinarianId { get; set; }
+
+    [Parameter]
+    public string? ServiceIds { get; set; }
+
+    private int currentStep = 1;
+    private bool loading = true;
+    private bool isSubmitting = false;
+    private string? userId;
+    
+    // Step 1: Veterinarian Selection
+    private List<Veterinarian> veterinarians = new();
+    private Veterinarian? selectedVeterinarian;
+    
+    // Step 2: Service Selection
+    private List<Service> services = new();
+    private HashSet<int> selectedServiceIds = new();
+    private Service? selectedService;
+    
+    // Step 3: Date & Time Selection
+    private DateTime selectedDate = DateTime.Today;
+    private DateTime selectedTime;
+    private List<DateTime> availableTimeSlots = new();
+    private List<Pet> pets = new();
+    private int selectedPetId;
+    private string notes = "";
+    
+    // Step 4: Confirmation
+    private bool confirmed = false;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // If this is the first render and we have a VeterinarianId, trigger the "Next" button click
+        if (firstRender && VeterinarianId.HasValue && currentStep == 2 && selectedVeterinarian != null)
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", "Auto-advancing to next step");
+            // Use JS to simulate a click on the Next button
+            await JSRuntime.InvokeVoidAsync("document.querySelector('.btn-primary').click");
+        }
+        
+        // Ensure pet selection is properly reflected in the UI
+        if (firstRender && currentStep == 3 && selectedPetId > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("console.log", $"Initializing selected pet ID: {selectedPetId}");
+            await JSRuntime.InvokeVoidAsync("petSelectionHelpers.selectPet", selectedPetId);
+        }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            loading = true;
+            
+            // Always load necessary data first
+            await LoadVeterinarians();
+            await LoadUserPets();
+            
+            if (pets.Count == 0)
+            {
+                Console.WriteLine("WARNING: No pets found for this user!");
+            }
+            else
+            {
+                Console.WriteLine($"Found {pets.Count} pets for user {userId}");
+                foreach (var pet in pets)
+                {
+                    Console.WriteLine($"* Pet {pet.Id}: {pet.Name} ({pet.Species})");
+                }
+            }
+            
+            // Get query parameters if on confirmation page
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            Console.WriteLine($"Current URI: {uri.AbsolutePath}{uri.Query}");
+            
+            // Check if we're on the confirm page
+            if (uri.AbsolutePath.Contains("/confirm"))
+            {
+                var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                Console.WriteLine("Query parameters received:");
+                foreach (string key in queryParams.AllKeys)
+                {
+                    Console.WriteLine($"{key}: {queryParams[key]}");
+                }
+                
+                // Parse date parameter
+                if (queryParams["date"] != null && DateTime.TryParse(queryParams["date"], out DateTime parsedDate))
+                {
+                    selectedDate = parsedDate;
+                    Console.WriteLine($"Parsed date: {selectedDate:yyyy-MM-dd}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ WARNING: Failed to parse date parameter: '{queryParams["date"]}'");
+                }
+                
+                // Parse time parameter (format: HH-mm)
+                if (queryParams["time"] != null)
+                {
+                    try 
+                    {
+                        string timeParam = queryParams["time"];
+                        Console.WriteLine($"Raw time parameter: '{timeParam}'");
+                        
+                        // First attempt: standard format HH-mm
+                        var timeParts = timeParam.Split('-');
+                        if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int hour) && int.TryParse(timeParts[1], out int minute))
+                        {
+                            Console.WriteLine($"Parsed time parts: hour={hour}, minute={minute}");
+                            selectedTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, hour, minute, 0);
+                            Console.WriteLine($"✓ Successfully parsed time: {selectedTime:HH:mm} from '{timeParam}'");
+                        }
+                        else
+                        {
+                            // Try alternate parsing approach for time
+                            if (DateTime.TryParse(timeParam.Replace('-', ':'), out DateTime parsedTime))
+                            {
+                                selectedTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, 
+                                                           parsedTime.Hour, parsedTime.Minute, 0);
+                                Console.WriteLine($"✓ Parsed time using alternate method: {selectedTime:HH:mm}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"⚠ WARNING: Could not parse time parameter: '{timeParam}'");
+                                // Default to 9:00 AM if time parsing fails
+                                selectedTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, 9, 0, 0);
+                                Console.WriteLine($"Using default time: {selectedTime:HH:mm}");
+                            }
+                        }
+                        
+                        // Immediately after parsing, log what we've set
+                        Console.WriteLine($"FINAL TIME SET: {selectedTime} ({selectedTime.Hour}:{selectedTime.Minute})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠ ERROR parsing time: {ex.Message}");
+                        selectedTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, 9, 0, 0);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("⚠ No time parameter found in query string.");
+                    selectedTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, 9, 0, 0);
+                }
+                
+                // Parse petId parameter
+                if (queryParams["petId"] != null && int.TryParse(queryParams["petId"], out int parsedPetId))
+                {
+                    selectedPetId = parsedPetId;
+                    var selectedPet = pets.FirstOrDefault(p => p.Id == selectedPetId);
+                    
+                    if (selectedPet != null)
+                    {
+                        Console.WriteLine($"✓ Successfully parsed petId: {selectedPetId} - Pet: {selectedPet.Name}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"⚠ Parsed petId: {selectedPetId} but pet not found in user's pets!");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"⚠ WARNING: Invalid or missing petId in query params!");
+                    // If no pet is selected, default to the first pet if any exist
+                    if (pets.Any())
+                    {
+                        selectedPetId = pets.First().Id;
+                        Console.WriteLine($"Defaulting to first pet: ID={selectedPetId}, Name={pets.First().Name}");
+                    }
+                }
+                
+                // Parse notes parameter (optional)
+                if (queryParams["notes"] != null)
+                {
+                    notes = queryParams["notes"];
+                }
+                
+                // Load services if we're on step 4
+                if (string.IsNullOrEmpty(ServiceIds) == false)
+                {
+                    await LoadServices();
+                    foreach (var idStr in ServiceIds.Split('-'))
+                    {
+                        if (int.TryParse(idStr, out int serviceId))
+                        {
+                            selectedServiceIds.Add(serviceId);
+                        }
+                    }
+                }
+                
+                // Set to step 4 (confirmation)
+                currentStep = 4;
+            }
+            
+            // If VeterinarianId parameter is provided, pre-select that veterinarian
+            if (VeterinarianId.HasValue && VeterinarianId.Value > 0)
+            {
+                var veterinarian = veterinarians.FirstOrDefault(v => v.Id == VeterinarianId.Value);
+                if (veterinarian != null)
+                {
+                    selectedVeterinarian = veterinarian;
+                    await LoadServices(); // Load services for step 2
+                    
+                    // If ServiceIds parameter is provided, parse and select services
+                    if (!string.IsNullOrEmpty(ServiceIds))
+                    {
+                        foreach (var idStr in ServiceIds.Split('-'))
+                        {
+                            if (int.TryParse(idStr, out int serviceId))
+                            {
+                                selectedServiceIds.Add(serviceId);
+                            }
+                        }
+                        
+                        if (selectedServiceIds.Any())
+                        {
+                            // Find the first selected service for the appointment
+                            selectedService = services.FirstOrDefault(s => selectedServiceIds.Contains(s.Id));
+                            await GenerateAvailableTimeSlots();
+                            
+                            // Only set to step 3 if we're not already on step 4 (confirm)
+                            if (currentStep != 4)
+                            {
+                                currentStep = 3; // Skip to step 3
+                            }
+                        }
+                        else if (currentStep != 4) // Only set to step 2 if we're not already on step 4
+                        {
+                            currentStep = 2; // Stay at step 2
+                        }
+                    }
+                    else if (currentStep != 4) // Only set to step 2 if we're not already on step 4
+                    {
+                        currentStep = 2; // Skip to step 2
+                    }
+                    
+                    StateHasChanged();
+                }
+            }
+            
+            loading = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing: {ex.Message}");
+            loading = false;
+        }
+    }
+    
+    private async Task LoadVeterinarians()
+    {
+        try
+        {
+            veterinarians = await DbContext.Veterinarians
+                .Include(v => v.User)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading veterinarians: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadServices()
+    {
+        try
+        {
+            services = await DbContext.Services.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading services: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadUserPets()
+    {
+        try
+        {
+            Console.WriteLine($"Loading pets for user: {userId}");
+            pets = await DbContext.Pets
+                .Where(p => p.OwnerId == userId)
+                .ToListAsync();
+            
+            Console.WriteLine($"Found {pets.Count} pets");
+            foreach (var pet in pets)
+            {
+                Console.WriteLine($"Pet: {pet.Id} - {pet.Name} ({pet.Species})");
+            }
+            
+            // If user has no pets, add a default one for testing
+            if (!pets.Any() && !string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("No pets found, creating default pet");
+                var pet = new Pet
+                {
+                    Name = "Max",
+                    Species = "Dog",
+                    Breed = "Mixed",
+                    DateOfBirth = DateTime.Today.AddYears(-3),
+                    OwnerId = userId
+                };
+                
+                DbContext.Pets.Add(pet);
+                await DbContext.SaveChangesAsync();
+                pets = await DbContext.Pets
+                    .Where(p => p.OwnerId == userId)
+                    .ToListAsync();
+                
+                Console.WriteLine($"Created default pet with ID: {pets.FirstOrDefault()?.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading pets: {ex.Message}");
+        }
+    }
+    
+    private async Task GenerateAvailableTimeSlots()
+    {
+        try
+        {
+            // Business hours: 9 AM to 5 PM, every 30 minutes
+            var slots = new List<DateTime>();
+            var date = selectedDate.Date;
+            
+            // Simply generate slots every 30 minutes from 9 AM to 5 PM
+            for (int hour = 9; hour < 17; hour++)
+            {
+                for (int minute = 0; minute < 60; minute += 30)
+                {
+                    var slotTime = new DateTime(date.Year, date.Month, date.Day, hour, minute, 0);
+                    slots.Add(slotTime);
+                }
+            }
+            
+            availableTimeSlots = slots;
+            
+            // Select the first time slot by default
+            if (availableTimeSlots.Any())
+            {
+                selectedTime = availableTimeSlots.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error generating time slots: {ex.Message}");
+            // Provide some default slots if there's an error
+            availableTimeSlots = new List<DateTime> 
+            {
+                selectedDate.Date.AddHours(9),
+                selectedDate.Date.AddHours(10),
+                selectedDate.Date.AddHours(11),
+                selectedDate.Date.AddHours(14),
+                selectedDate.Date.AddHours(15),
+                selectedDate.Date.AddHours(16)
+            };
+            
+            if (availableTimeSlots.Any())
+            {
+                selectedTime = availableTimeSlots.First();
+            }
+        }
+    }
+    
+    private void NavigateToVet(int vetId)
+    {
+        // Direct navigation to the URL with the vet ID
+        NavigationManager.NavigateTo($"/appointments/book/{vetId}", true);
+    }
+    
+    private void ToggleService(int serviceId)
+    {
+        Console.WriteLine($"===== TOGGLE SERVICE CALLED: {serviceId} =====");
+        
+        if (selectedServiceIds.Contains(serviceId))
+        {
+            selectedServiceIds.Remove(serviceId);
+            Console.WriteLine($"⚠️ Service {serviceId} REMOVED. Count now: {selectedServiceIds.Count}");
+        }
+        else
+        {
+            selectedServiceIds.Add(serviceId);
+            Console.WriteLine($"✅ Service {serviceId} ADDED. Count now: {selectedServiceIds.Count}");
+        }
+        
+        // Force UI update
+        StateHasChanged();
+        
+        Console.WriteLine($"🔄 CURRENT SELECTION: {string.Join(", ", selectedServiceIds)}");
+    }
+    
+    private void SelectTimeSlot(DateTime slot)
+    {
+        selectedTime = slot;
+    }
+    
+    private bool CanProceed()
+    {
+        return currentStep switch
+        {
+            1 => selectedVeterinarian != null,
+            2 => selectedServiceIds.Any(),
+            3 => selectedPetId > 0 && selectedTime != default,
+            4 => confirmed && !isSubmitting,
+            _ => false
+        };
+    }
+    
+    private async Task SubmitBooking()
+    {
+        if (!CanProceed() || selectedVeterinarian == null || !selectedServiceIds.Any())
+            return;
+            
+        try
+        {
+            isSubmitting = true;
+            
+            // Find the primary service for this appointment
+            var primaryService = services.FirstOrDefault(s => selectedServiceIds.Contains(s.Id));
+            if (primaryService == null) return;
+            
+            var appointment = new Appointment
+            {
+                ClientId = userId,
+                VeterinarianId = selectedVeterinarian.Id,
+                ServiceId = primaryService.Id,
+                PetId = selectedPetId,
+                StartTime = selectedTime,
+                EndTime = selectedTime.AddMinutes(primaryService.DurationMinutes),
+                Notes = notes,
+                Status = AppointmentStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            DbContext.Appointments.Add(appointment);
+            
+            // Save additional services if more than one was selected
+            if (selectedServiceIds.Count > 1)
+            {
+                notes += "\n\nAdditional services requested: ";
+                foreach (var serviceId in selectedServiceIds.Where(id => id != primaryService.Id))
+                {
+                    var service = services.FirstOrDefault(s => s.Id == serviceId);
+                    if (service != null)
+                    {
+                        notes += service.Name + ", ";
+                    }
+                }
+                notes = notes.TrimEnd(',', ' ');
+                appointment.Notes = notes;
+            }
+            
+            await DbContext.SaveChangesAsync();
+            
+            // Redirect to the appointments page with a success message
+            NavigationManager.NavigateTo("/appointments?success=true");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error booking appointment: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+    
+    private int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+    
+    private decimal CalculateTotalPrice()
+    {
+        decimal totalPrice = 0;
+        foreach (var serviceId in selectedServiceIds)
+        {
+            var service = services.FirstOrDefault(s => s.Id == serviceId);
+            if (service != null)
+            {
+                totalPrice += service.Price;
+            }
+        }
+        return totalPrice;
+    }
+
+    private string GetSelectedServiceIdsString()
+    {
+        return string.Join("-", selectedServiceIds);
+    }
+
+    private async Task NextStep()
+    {
+        if (currentStep < 4)
+        {
+            // Before advancing to the next step, load necessary data
+            if (currentStep == 1 && selectedVeterinarian != null)
+            {
+                await LoadServices();
+            }
+            else if (currentStep == 2 && selectedServiceIds.Any())
+            {
+                // Find the first selected service for the appointment
+                selectedService = services.FirstOrDefault(s => selectedServiceIds.Contains(s.Id));
+                await GenerateAvailableTimeSlots();
+            }
+            
+            currentStep++;
+        }
+    }
+    
+    private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    private void UpdateSelectedTime(string value)
+    {
+        if (DateTime.TryParse(value, out DateTime parsedTime))
+        {
+            // Only update hour and minute, keep the date the same
+            selectedTime = new DateTime(
+                selectedDate.Year,
+                selectedDate.Month,
+                selectedDate.Day,
+                parsedTime.Hour,
+                parsedTime.Minute,
+                0
+            );
+        }
+        
+        StateHasChanged();
+    }
+
+    private void PrepareForConfirmation()
+    {
+        Console.WriteLine($"Preparing for confirmation with Pet ID: {selectedPetId}, Date: {selectedDate}, Time: {selectedTime}");
+        StateHasChanged();
+    }
+    
+    private void ValidateBeforeConfirmation()
+    {
+        if (selectedPetId <= 0)
+        {
+            Console.WriteLine("ERROR: Cannot proceed to confirmation without selecting a pet!");
+            return;
+        }
+        
+        Console.WriteLine($"Validating before confirmation:");
+        Console.WriteLine($"- Pet ID: {selectedPetId}");
+        Console.WriteLine($"- Date: {selectedDate.ToShortDateString()}");
+        Console.WriteLine($"- Time: {selectedTime.ToString("h:mm tt")}");
+        
+        var pet = pets.FirstOrDefault(p => p.Id == selectedPetId);
+        Console.WriteLine($"- Selected pet: {pet?.Name ?? "Unknown"}");
+    }
+
+    private async Task ForceUIRefresh()
+    {
+        Console.WriteLine("Forcing UI refresh...");
+        
+        // Check if we have a pet selected
+        if (selectedPetId > 0)
+        {
+            Console.WriteLine($"Pet is selected: ID={selectedPetId}, Name={pets.FirstOrDefault(p => p.Id == selectedPetId)?.Name}");
+        }
+        else
+        {
+            Console.WriteLine("No pet is selected yet");
+        }
+        
+        // Force Blazor refresh
+        await InvokeAsync(StateHasChanged);
+        
+        // Also use JS to refresh
+        await JSRuntime.InvokeVoidAsync("console.log", "Forcing UI refresh from button");
+    }
+
+    private int CalculateAppointmentDuration()
+    {
+        int totalMinutes = 0;
+        foreach (var serviceId in selectedServiceIds)
+        {
+            var service = services.FirstOrDefault(s => s.Id == serviceId);
+            if (service != null)
+            {
+                totalMinutes += service.DurationMinutes;
+            }
+        }
+        
+        // Return at least 30 minutes if no services with duration were found
+        return totalMinutes > 0 ? totalMinutes : 30;
+    }
+
+    // Helper method to format date and time consistently
+    private string FormatDateForUrl(DateTime date)
+    {
+        return Uri.EscapeDataString(date.ToString("yyyy-MM-dd"));
+    }
+    
+    private string FormatTimeForUrl(DateTime time)
+    {
+        return Uri.EscapeDataString(time.ToString("HH-mm"));
+    }
+    
+    // Helper method to build confirmation URL
+    private string BuildConfirmationUrl(int petId)
+    {
+        Console.WriteLine($"Building URL with Time: {selectedTime:h:mm tt} ({selectedTime.Hour}:{selectedTime.Minute})");
+        
+        // Format time ensuring two digits for hour and minute
+        string timeFormat = $"{selectedTime.Hour:00}-{selectedTime.Minute:00}";
+        Console.WriteLine($"Formatted time for URL: {timeFormat}");
+        
+        // Build the complete URL with all parameters
+        string url = $"/appointments/book/{VeterinarianId}/services/{ServiceIds}/confirm" +
+               $"?date={FormatDateForUrl(selectedDate)}" +
+               $"&time={Uri.EscapeDataString(timeFormat)}" +
+               $"&petId={petId}";
+               
+        // Only add notes if present
+        if (!string.IsNullOrEmpty(notes)) {
+            url += $"&notes={HttpUtility.UrlEncode(notes)}";
+        }
+        
+        Console.WriteLine($"Final URL: {url}");
+        return url;
+    }
+
+    private void DebugFormValues(int? vetId, string? services, int petId, DateTime date, DateTime time)
+    {
+        Console.WriteLine("==== DEBUG FORM VALUES ====");
+        Console.WriteLine($"VetID: {vetId?.ToString() ?? "NULL"} - Type: {vetId?.GetType().Name ?? "null"}");
+        Console.WriteLine($"ServiceIDs: {services ?? "NULL"} - Type: {services?.GetType().Name ?? "null"}");
+        Console.WriteLine($"PetID: {petId} - Type: {petId.GetType().Name}");
+        Console.WriteLine($"Date: {date.ToString("yyyy-MM-dd")} - Type: {date.GetType().Name}");
+        Console.WriteLine($"Time: {time.ToString("HH:mm")} - Type: {time.GetType().Name}");
+        Console.WriteLine($"Time format for URL: {time.Hour:00}-{time.Minute:00}");
+        Console.WriteLine("==========================");
+    }
+} 

@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager NavigationManager
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    var statusMessageClass = Message.StartsWith("Error") ? "danger" : "success";
+    <div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
+        <div>@Message</div>
+        <button type="button" class="btn-close" aria-label="Close" @onclick="ClearStatusMessage"></button>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+    
+    private string? Message { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // First check for message in query string (used by some redirects)
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("message", out var param))
+        {
+            Message = param.First();
+            return;
+        }
+
+        // Then check for message in cookies (used by identity operations)
+        if (HttpContext.Request.Cookies.TryGetValue("Identity.StatusMessage", out var cookieMessage) && !string.IsNullOrEmpty(cookieMessage))
+        {
+            Message = cookieMessage;
+            // Remove the cookie after reading it
+            HttpContext.Response.Cookies.Delete("Identity.StatusMessage");
+        }
+    }
+
+    private void ClearStatusMessage()
+    {
+        Message = null;
+    }
+} 
