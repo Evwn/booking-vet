@@ -79,13 +79,8 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Bio</label>
-                                    <textarea class="form-control" rows="4" @bind="veterinarian.Bio"></textarea>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label">Years of Experience</label>
-                                    <input type="number" class="form-control" @bind="veterinarian.YearsOfExperience" min="0" max="50">
+                                    <label class="form-label">Biography</label>
+                                    <textarea class="form-control" rows="4" @bind="veterinarian.Biography"></textarea>
                                 </div>
                             }
                             
@@ -110,7 +105,7 @@
                             <dd class="col-sm-7">@(isVeterinarian ? "Veterinarian" : "Client")</dd>
                             
                             <dt class="col-sm-5">Joined</dt>
-                            <dd class="col-sm-7">@user.CreatedAt.ToString("MMMM d, yyyy")</dd>
+                            <dd class="col-sm-7">@user.Created.ToString("MMMM d, yyyy")</dd>
                         </dl>
                         
                         <div class="d-grid gap-2 mt-3">

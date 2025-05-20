@@ -1,0 +1,392 @@
+@page "/vet/patients/{id:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using SimpleVetBooking.Data
+@using SimpleVetBooking.Data.Models
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>Patient Details</PageTitle>
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Patient Details</h1>
+        <a href="/vet/patients" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Patients
+        </a>
+    </div>
+
+    @if (loading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!isVeterinarian)
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">Access Denied</h4>
+            <p>You do not have veterinarian privileges to access this page.</p>
+            <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+    }
+    else if (pet == null)
+    {
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Patient Not Found</h4>
+            <p>This patient record does not exist or you don't have access to view it.</p>
+            <a href="/vet/patients" class="btn btn-primary">Back to Patients</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Pet Information</h4>
+                        <span class="badge bg-primary">@pet.Species</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div style="width: 150px; height: 150px; background-color: #e9ecef; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-camera" style="font-size: 3rem; color: #adb5bd;"></i>
+                            </div>
+                        </div>
+                        
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">@pet.Name</dd>
+                            
+                            <dt class="col-sm-4">Species:</dt>
+                            <dd class="col-sm-8">@pet.Species</dd>
+                            
+                            <dt class="col-sm-4">Breed:</dt>
+                            <dd class="col-sm-8">@pet.Breed</dd>
+                            
+                            <dt class="col-sm-4">Age:</dt>
+                            <dd class="col-sm-8">@CalculateAge(pet.DateOfBirth) years (@pet.DateOfBirth.ToString("MMM dd, yyyy"))</dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Owner Information</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (pet.Owner != null)
+                        {
+                            <dl class="row">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">@pet.Owner.FirstName @pet.Owner.LastName</dd>
+                                
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="mailto:@pet.Owner.Email">@pet.Owner.Email</a>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Phone:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="tel:@pet.Owner.PhoneNumber">@pet.Owner.PhoneNumber</a>
+                                </dd>
+                            </dl>
+                        }
+                        else
+                        {
+                            <p class="text-muted">Owner information not available.</p>
+                        }
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Medical Alerts</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(pet.MedicalHistory))
+                        {
+                            <div class="alert alert-danger mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                @pet.MedicalHistory
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">No medical alerts recorded.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">Upcoming Appointments</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (upcomingAppointments.Count > 0)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Service</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var appointment in upcomingAppointments)
+                                        {
+                                            <tr>
+                                                <td>@appointment.StartTime.ToString("MMM dd, yyyy")</td>
+                                                <td>@appointment.StartTime.ToString("h:mm tt") - @appointment.EndTime.ToString("h:mm tt")</td>
+                                                <td>@appointment.Service?.Name</td>
+                                                <td>
+                                                    <span class="badge bg-@GetStatusClass(appointment.Status)">
+                                                        @appointment.Status.ToString()
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="/vet/appointments/@appointment.Id" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No upcoming appointments scheduled.</p>
+                        }
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Medical History</h4>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showAddNoteModal()">
+                            <i class="bi bi-plus-circle me-2"></i>Add Note
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (medicalHistory.Count > 0)
+                        {
+                            <div class="timeline">
+                                @foreach (var entry in medicalHistory)
+                                {
+                                    <div class="timeline-item">
+                                        <div class="timeline-date">
+                                            @entry.Date.ToString("MMM dd, yyyy")
+                                        </div>
+                                        <div class="timeline-content">
+                                            <h5>@entry.Title</h5>
+                                            <p>@entry.Description</p>
+                                            <div class="small text-muted">
+                                                Recorded by Dr. @entry.VeterinarianName
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No medical history records available.</p>
+                        }
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Notes</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(pet.MedicalHistory))
+                        {
+                            <div class="p-3 bg-light rounded">
+                                @pet.MedicalHistory
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No additional notes available.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+        padding-left: 20px;
+        border-left: 2px solid #dee2e6;
+    }
+    
+    .timeline-date {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
+    
+    .timeline-content {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    
+    private bool loading = true;
+    private bool isVeterinarian = false;
+    private Veterinarian? veterinarian;
+    private Pet? pet;
+    private List<Appointment> upcomingAppointments = new();
+    
+    // Mock medical history for demo
+    private class MedicalHistoryEntry
+    {
+        public DateTime Date { get; set; }
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string VeterinarianName { get; set; } = "";
+    }
+    
+    private List<MedicalHistoryEntry> medicalHistory = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+            
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+            
+            // Get the user and check if they are a veterinarian
+            var appUser = await DbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+                
+            if (appUser == null)
+            {
+                return;
+            }
+            
+            isVeterinarian = appUser.IsVeterinarian;
+            
+            if (!isVeterinarian)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+            
+            // Get the veterinarian profile
+            veterinarian = await DbContext.Veterinarians
+                .FirstOrDefaultAsync(v => v.UserId == userId);
+                
+            if (veterinarian == null)
+            {
+                return;
+            }
+            
+            // Load pet details
+            pet = await DbContext.Pets
+                .Include(p => p.Owner)
+                .FirstOrDefaultAsync(p => p.Id == Id);
+                
+            if (pet != null)
+            {
+                // Load upcoming appointments for this pet
+                var now = DateTime.UtcNow;
+                upcomingAppointments = await DbContext.Appointments
+                    .Where(a => a.PetId == Id && a.StartTime >= now)
+                    .Include(a => a.Service)
+                    .OrderBy(a => a.StartTime)
+                    .ToListAsync();
+                    
+                // In a real app, we would load the medical history from database
+                // For demo purposes, we'll create some mock data
+                medicalHistory = new List<MedicalHistoryEntry>
+                {
+                    new MedicalHistoryEntry
+                    {
+                        Date = DateTime.UtcNow.AddMonths(-3),
+                        Title = "Annual Checkup",
+                        Description = "Regular checkup shows all vitals normal. Weight is stable at 28kg. Vaccinations updated.",
+                        VeterinarianName = "Mark Johnson"
+                    },
+                    new MedicalHistoryEntry
+                    {
+                        Date = DateTime.UtcNow.AddMonths(-6),
+                        Title = "Skin Irritation",
+                        Description = "Presented with skin irritation on left forepaw. Prescribed anti-inflammatory cream to apply twice daily for 7 days.",
+                        VeterinarianName = "Sarah Williams"
+                    }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading patient details: {ex.Message}");
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    private int CalculateAge(DateTime dateOfBirth)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+    
+    private string GetStatusClass(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Pending => "warning",
+            AppointmentStatus.Confirmed => "success",
+            AppointmentStatus.Completed => "info",
+            AppointmentStatus.Cancelled => "danger",
+            _ => "secondary"
+        };
+    }
+} 
